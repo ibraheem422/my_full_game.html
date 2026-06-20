@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Collector</title>
+    <!-- URL-Encoded SVG Favicon to ensure the golden star emoji displays in the browser tab -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E⭐%3C/text%3E%3C/svg%3E">
+    <style>
+        /* Base theme CSS variables - default is Dark Mode */
+        :root {
+            --bg-color: #111424;
+            --text-color: #ffffff;
+            --panel-bg: #1b1f38;
+            --border-color: #4a55a2;
+            --select-bg: #4a55a2;
+            --select-border: #5c6bc0;
+            --select-text: #ffffff;
+            --label-color: #b3b9df;
+        }
+
+        /* Light Mode theme adjustments override */
+        [data-theme="light"] {
+            --bg-color: #f0f2f9;
+            --text-color: #111424;
+            --panel-bg: #ffffff;
+            --border-color: #4a55a2;
+            --select-bg: #ffffff;
+            --select-border: #4a55a2;
+            --select-text: #111424;
+            --label-color: #4a55a2;
+        }
+
+        /* Base page styling using theme variables */
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Container to ensure a clean vertical layout flow */
+        .wrapper {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Style for the website logo and its fallback container */
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px auto 10px auto;
+            min-height: 80px;
+        }
+        .site-logo {
+            max-width: 120px;
+            height: auto;
+            display: block;
+        }
+        /* Stylish modern backup logo if logo.png is missing */
+        .fallback-logo {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            width: 70px;
+            height: 70px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+            animation: pulse 2s infinite alternate;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.08); }
+        }
+
+        h1 {
+            margin: 0 0 15px 0;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: var(--text-color);
+            font-size: 36px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Menu layout card using variables */
+        #menu {
+            background-color: var(--panel-bg);
+            border: 4px solid var(--border-color);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 320px;
+            margin: 15px auto;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            box-sizing: border-box;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .menu-element {
+            margin: 15px 0;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Panel Views */
+        #loginPanel {
+            display: block;
+            width: 100%;
+        }
+
+        #mainMenuPanel {
+            display: none;
+            width: 100%;
+        }
+
+        #settingsPanel {
+            display: none;
+            width: 100%;
+        }
+
+        /* Shared Form Inputs for Login and Register fields */
+        input {
+            font-size: 16px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            background-color: var(--select-bg);
+            color: var(--select-text);
+            border: 2px solid var(--select-border);
+            outline: none;
+            width: 100%;
+            box-sizing: border-box;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+        input::placeholder {
+            color: var(--label-color);
+            opacity: 0.6;
+        }
+        input:focus {
+            border-color: #FFD700;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: var(--label-color);
+            text-align: left;
+            width: 100%;
+        }
+
+        /* Styling for Auth tabs (Log In / Sign Up toggles) */
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .auth-tab {
+            flex: 1;
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background-color: transparent;
+            color: var(--label-color);
+            border: 1.5px solid var(--border-color);
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: none;
+            transition: all 0.2s;
+        }
+        .auth-tab:hover {
+            border-color: #FFD700;
+            color: var(--text-color);
+            transform: none;
+            box-shadow: none;
+        }
+        .auth-tab.active {
+            background-color: #4a55a2;
+            color: white;
+            border-color: #4a55a2;
+        }
+
+        .auth-message {
+            font-size: 13px;
+            color: #d9534f;
+            margin-bottom: 12px;
+            font-weight: bold;
+            display: none;
+            width: 100%;
+            text-align: center;
+        }
+        .auth-message.success {
+            color: #5cb85c;
+        }
+
+        .profile-badge {
+            font-size: 14px;
+            font-weight: bold;
+            color: #FFD700;
+            background-color: rgba(255, 215, 0, 0.1);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        select {
+            font-size: 16px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            background-color: var(--select-bg);
+            color: var(--select-text);
+            border: 2px solid var(--select-border);
+            cursor: pointer;
+            outline: none;
+            width: 100%;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+        select:focus {
+            border-color: #FFD700;
+        }
+
+        /* Buttons that pop */
+        button {
+            font-size: 18px;
+            padding: 12px 24px;
+            border-radius: 6px;
+            background-color: #FFD700;
+            color: #111424;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(255, 215, 0, 0.2);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button:hover {
+            background-color: #FFA500;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 165, 0, 0.4);
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+
+        /* Style variation for secondary buttons */
+        .secondary-btn {
+            background-color: #4a55a2;
+            color: white;
+            box-shadow: 0 4px 10px rgba(74, 85, 162, 0.2);
+        }
+        .secondary-btn:hover {
+            background-color: #3b4380;
+            box-shadow: 0 6px 15px rgba(74, 85, 162, 0.4);
+        }
+
+        /* Game interface layouts */
+        #stats {
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: none;
+            width: 100%;
+            justify-content: center;
+            gap: 10px;
+        }
+        .stat-box {
+            background-color: var(--panel-bg);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            font-weight: bold;
+            min-width: 90px;
+            color: var(--text-color);
+            transition: background-color 0.3s, border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        canvas {
+            background-color: var(--panel-bg);
+            border: 4px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            display: none;
+            margin: 0 auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            max-width: 100%;
+            height: auto;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        /* Controls design */
+        #controls {
+            display: none;
+            margin-top: 15px;
+            width: 100%;
+            max-width: 500px;
+        }
+        .control-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .control-btn {
+            font-size: 14px;
+            padding: 10px 15px;
+            background-color: #4a55a2;
+            color: white;
+            border-radius: 6px;
+            box-shadow: none;
+            width: 100%;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .control-btn:hover {
+            background-color: #3b4380;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        #endGameBtn {
+            background-color: #d9534f;
+            color: white;
+            grid-column: span 2;
+            font-size: 16px;
+            padding: 12px;
+        }
+        #endGameBtn:hover {
+            background-color: #c9302c;
+        }
+
+        .menu-stat {
+            font-size: 16px;
+            color: #FFD700;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        [data-theme="light"] .menu-stat {
+            background-color: rgba(74, 85, 162, 0.05);
+            border: 1px solid rgba(74, 85, 162, 0.2);
+            color: #4a55a2;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        <!-- Logo Section with Smart Fallback -->
+        <div class="logo-container">
+            <img id="logoImg" src="logo.png" alt="Game Logo" class="site-logo" onerror="handleLogoError()">
+        </div>
+
+        <h1>Star Collector</h1>
+
+        <div id="menu">
+            <!-- ==================== LOGIN / REGISTRATION SYSTEM ==================== -->
+            <div id="loginPanel">
+                <div class="auth-tabs">
+                    <button id="authLoginTab" class="auth-tab active">Log In</button>
+                    <button id="authSignUpTab" class="auth-tab">Sign Up</button>
+                </div>
+
+                <div id="authMsg" class="auth-message"></div>
+
+                <form id="authForm" onsubmit="event.preventDefault();">
+                    <div class="menu-element" style="align-items: flex-start; margin: 0 0 10px 0;">
+                        <label class="form-label" for="authUsername">Username:</label>
+                        <input id="authUsername" type="text" placeholder="Astronaut name..." required>
+                    </div>
+
+                    <div class="menu-element" style="align-items: flex-start; margin: 0 0 15px 0;">
+                        <label class="form-label" for="authPassword">Password:</label>
+                        <input id="authPassword" type="password" placeholder="🔑 Password" required>
+                    </div>
+
+                    <div class="menu-element" style="margin: 10px 0;">
+                        <button id="authSubmitBtn" type="button">Log In</button>
+                    </div>
+
+                    <div class="menu-element" style="margin: 0;">
+                        <button id="guestPlayBtn" class="secondary-btn" type="button">🚀 Play as Guest</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ==================== MAIN MENU VIEW ==================== -->
+            <div id="mainMenuPanel">
+                <div class="profile-badge">
+                    🧑‍🚀 Pilot: <span id="activePilot">Guest</span>
+                </div>
+                <div class="menu-element">
+                    <div class="menu-stat">
+                        <span>Daily Streak:</span>
+                        <span><span id="streakText">0</span> 🔥</span>
+                    </div>
+                </div>
+                <div class="menu-element">
+                    <div class="menu-stat">
+                        <span>High Score:</span>
+                        <span><span id="highScoreText">0</span> 🏆</span>
+                    </div>
+                </div>
+                <div class="menu-element">
+                    <button id="startBtn">Start Game</button>
+                </div>
+                <div class="menu-element">
+                    <button id="settingsBtn" class="secondary-btn">⚙️ Game Settings</button>
+                </div>
+                <div class="menu-element">
+                    <button id="logoutBtn" class="secondary-btn" style="background-color: #d9534f;">🚪 Log Out</button>
+                </div>
+            </div>
+
+            <!-- ==================== SETTINGS VIEW ==================== -->
+            <div id="settingsPanel">
+                <h2 style="margin-top: 0; color: #FFD700; font-size: 24px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 20px;">Settings</h2>
+                
+                <div class="menu-element" style="align-items: flex-start; margin-bottom: 15px;">
+                    <label for="difficulty" style="font-size: 15px; font-weight: bold; margin-bottom: 6px; color: var(--label-color); text-align: left;">Difficulty Preset:</label>
+                    <select id="difficulty">
+                        <option value="easy">Easy (Relaxed)</option>
+                        <option value="medium" selected>Medium (Standard)</option>
+                        <option value="hard">Hard (Extreme)</option>
+                    </select>
+                </div>
+
+                <div class="menu-element" style="align-items: flex-start; margin-bottom: 15px;">
+                    <label for="themeMode" style="font-size: 15px; font-weight: bold; margin-bottom: 6px; color: var(--label-color); text-align: left;">Theme Mode:</label>
+                    <select id="themeMode">
+                        <option value="dark" selected>Dark Mode (Default)</option>
+                        <option value="light">Light Mode</option>
+                    </select>
+                </div>
+
+                <div class="menu-element" style="margin-top: 25px;">
+                    <button id="backBtn" class="secondary-btn">⬅️ Back to Menu</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== IN-GAME STATS & INTERFACE ==================== -->
+        <div id="stats">
+            <span class="stat-box">Score: <span id="scoreText">0</span></span>
+            <span class="stat-box">Time: <span id="timerText">00:00</span></span>
+            <span class="stat-box">Level: <span id="levelText">1</span></span>
+        </div>
+        
+        <canvas id="gameCanvas" width="500" height="400"></canvas>
+
+        <div id="controls">
+            <div class="control-grid">
+                <button id="resetScoreBtn" class="control-btn">Reset Score</button>
+                <button id="resetLevelBtn" class="control-btn">Reset Level</button>
+                <button id="resetBothBtn" class="control-btn" style="grid-column: span 2;">Reset Score & Level</button>
+            </div>
+            <button id="endGameBtn" class="control-btn">End Game</button>
+        </div>
+    </div>
+
+    <!-- Global App Scripts -->
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreText = document.getElementById("scoreText");
+        const levelText = document.getElementById("levelText");
+        const timerText = document.getElementById("timerText");
+        const streakText = document.getElementById("streakText");
+        const highScoreText = document.getElementById("highScoreText");
+        
+        const menu = document.getElementById("menu");
+        const loginPanel = document.getElementById("loginPanel");
+        const mainMenuPanel = document.getElementById("mainMenuPanel");
+        const settingsPanel = document.getElementById("settingsPanel");
+        
+        const startBtn = document.getElementById("startBtn");
+        const settingsBtn = document.getElementById("settingsBtn");
+        const backBtn = document.getElementById("backBtn");
+        const difficultySelect = document.getElementById("difficulty");
+        const themeModeSelect = document.getElementById("themeMode");
+        
+        const statsDiv = document.getElementById("stats");
+        const controlsDiv = document.getElementById("controls");
+
+        const resetScoreBtn = document.getElementById("resetScoreBtn");
+        const resetLevelBtn = document.getElementById("resetLevelBtn");
+        const resetBothBtn = document.getElementById("resetBothBtn");
+        const endGameBtn = document.getElementById("endGameBtn");
+
+        // Auth Dom Elements
+        const authLoginTab = document.getElementById("authLoginTab");
+        const authSignUpTab = document.getElementById("authSignUpTab");
+        const authUsernameInput = document.getElementById("authUsername");
+        const authPasswordInput = document.getElementById("authPassword");
+        const authSubmitBtn = document.getElementById("authSubmitBtn");
+        const guestPlayBtn = document.getElementById("guestPlayBtn");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const activePilotSpan = document.getElementById("activePilot");
+        const authMsg = document.getElementById("authMsg");
+
+        let score = 0;
+        let level = 1;
+        let playStreak = 0;
+        let highScore = 0;
+        let gameActive = false;
+        let animationId;
+        
+        // Active logged-in Pilot session variables
+        let isGuest = false;
+        let currentPilot = "";
+        let authMode = "login"; // "login" or "signup"
+        
+        // Timer variables
+        let gameSeconds = 0;
+        let timerInterval = null;
+
+        // --- BULLETPROOF STORAGE ENGINE ---
+        const storage = {
+            getItem(key) {
+                try {
+                    return localStorage.getItem(key);
+                } catch (e) {
+                    return null;
+                }
+            },
+            setItem(key, value) {
+                try {
+                    localStorage.setItem(key, value);
+                } catch (e) {
+                    console.log("Saving is unavailable on this device.");
+                }
+            }
+        };
+
+        // --- AUTH & LOGIN SYSTEM LOGIC ---
+        
+        // Quick helper to show simple UI inline errors inside the menu card
+        function displayAuthMessage(message, isSuccess = false) {
+            authMsg.textContent = message;
+            authMsg.style.display = "block";
+            if (isSuccess) {
+                authMsg.classList.add("success");
+            } else {
+                authMsg.classList.remove("success");
+            }
+        }
+
+        function clearAuthFields() {
+            authUsernameInput.value = "";
+            authPasswordInput.value = "";
+            authMsg.style.display = "none";
+        }
+
+        // Toggle Auth Action Mode
+        authLoginTab.addEventListener("click", () => {
+            authMode = "login";
+            authLoginTab.classList.add("active");
+            authSignUpTab.classList.remove("active");
+            authSubmitBtn.textContent = "Log In";
+            clearAuthFields();
+        });
+
+        authSignUpTab.addEventListener("click", () => {
+            authMode = "signup";
+            authSignUpTab.classList.add("active");
+            authLoginTab.classList.remove("active");
+            authSubmitBtn.textContent = "Create Account";
+            clearAuthFields();
+        });
+
+        // Submit credentials
+        authSubmitBtn.addEventListener("click", () => {
+            const username = authUsernameInput.value.trim();
+            const password = authPasswordInput.value;
+
+            if (!username || !password) {
+                displayAuthMessage("Please fill in all pilot coordinates.");
+                return;
+            }
+
+            // Clean input checks
+            if (username.length < 3) {
+                displayAuthMessage("Username must be at least 3 characters.");
+                return;
+            }
+            if (password.length < 4) {
+                displayAuthMessage("Password must be at least 4 characters.");
+                return;
+            }
+
+            // Retrieve registered users database
+            let users = {};
+            const savedUsers = storage.getItem("starCollectorUsers");
+            if (savedUsers) {
+                try {
+                    users = JSON.parse(savedUsers);
+                } catch (e) {
+                    users = {};
+                }
+            }
+
+            const lowerUser = username.toLowerCase();
+
+            if (authMode === "signup") {
+                // Sign Up Action
+                if (users[lowerUser]) {
+                    displayAuthMessage("Username has already been chosen in this sector.");
+                } else {
+                    users[lowerUser] = {
+                        originalName: username,
+                        password: password
+                    };
+                    storage.setItem("starCollectorUsers", JSON.stringify(users));
+                    displayAuthMessage("Account registered! Please switch tab to Log In.", true);
+                    // Automatically redirect to login tab for cleanliness
+                    setTimeout(() => {
+                        authLoginTab.click();
+                        authUsernameInput.value = username;
+                    }, 1000);
+                }
+            } else {
+                // Log In Action
+                if (users[lowerUser] && users[lowerUser].password === password) {
+                    currentPilot = users[lowerUser].originalName;
+                    isGuest = false;
+                    enterMainDashboard();
+                } else {
+                    displayAuthMessage("Invalid pilot alias or secret password passcode.");
+                }
+            }
+        });
+
+        // Guest Play Mode Button
+        guestPlayBtn.addEventListener("click", () => {
+            currentPilot = "Guest";
+            isGuest = true;
+            enterMainDashboard();
+        });
+
+        // Log Out Button
+        logoutBtn.addEventListener("click", () => {
+            currentPilot = "";
+            isGuest = false;
+            
+            // Toggle panels
+            mainMenuPanel.style.display = "none";
+            loginPanel.style.display = "block";
+            clearAuthFields();
+        });
+
+        // Function to load the Dashboard once authorized
+        function enterMainDashboard() {
+            loginPanel.style.display = "none";
+            mainMenuPanel.style.display = "block";
+            activePilotSpan.textContent = currentPilot;
+
+            // Load Streak System 
+            const todayDateString = new Date().toDateString(); 
+            const streakKey = isGuest ? "starCollectorStreak_guest" : `starCollectorStreak_${currentPilot.toLowerCase()}`;
+            const lastPlayedKey = isGuest ? "starCollectorLastDate_guest" : `starCollectorLastDate_${currentPilot.toLowerCase()}`;
+
+            const savedStreak = storage.getItem(streakKey);
+            if (savedStreak !== null && !isNaN(savedStreak) && savedStreak !== "") {
+                playStreak = parseInt(savedStreak, 10);
+            } else {
+                playStreak = 0;
+            }
+            streakText.textContent = playStreak;
+
+            // Load High Score for current authorized user
+            const scoreKey = isGuest ? "starCollectorHighScore_guest" : `starCollectorHighScore_${currentPilot.toLowerCase()}`;
+            const savedHighScore = storage.getItem(scoreKey);
+            if (savedHighScore !== null && !isNaN(savedHighScore) && savedHighScore !== "") {
+                highScore = parseInt(savedHighScore, 10);
+            } else {
+                highScore = 0;
+            }
+            highScoreText.textContent = highScore;
+        }
+
+        // --- THEME ENGINE LOADING ---
+        const savedTheme = storage.getItem("starCollectorTheme") || "dark";
+        document.documentElement.setAttribute("data-theme", savedTheme);
+        themeModeSelect.value = savedTheme;
+
+        // Watch for manual theme option updates
+        themeModeSelect.addEventListener("change", function() {
+            const selectedTheme = themeModeSelect.value;
+            document.documentElement.setAttribute("data-theme", selectedTheme);
+            storage.setItem("starCollectorTheme", selectedTheme);
+        });
+
+        // Smart Logo Fallback Handler
+        function handleLogoError() {
+            const logoContainer = document.querySelector('.logo-container');
+            logoContainer.innerHTML = '<div class="fallback-logo">⭐</div>';
+        }
+
+        // Star physics properties
+        let starX = canvas.width / 2;
+        let starY = canvas.height / 2;
+        
+        const normalRadius = 20;   
+        const giantRadius = 40;    
+        let currentRadius = normalRadius; 
+
+        // Speeds
+        let baseSpeedX = 0;
+        let baseSpeedY = 0;
+        let speedX = 0;
+        let speedY = 0;
+        let speedMultiplier = 1; 
+
+        function drawStar(cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            let step = Math.PI / spikes;
+
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerRadius);
+            
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+            ctx.fillStyle = "#FFD700"; 
+            ctx.fill();
+            ctx.strokeStyle = "#FFA500"; 
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        function updateGame() {
+            if (!gameActive) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            starX += speedX;
+            starY += speedY;
+
+            // Boundary collision checks
+            if (starX - currentRadius < 0 || starX + currentRadius > canvas.width) {
+                speedX = -speedX; 
+            }
+            if (starY - currentRadius < 0 || starY + currentRadius > canvas.height) {
+                speedY = -speedY; 
+            }
+
+            drawStar(starX, starY, 5, currentRadius, currentRadius / 2);
+
+            animationId = requestAnimationFrame(updateGame);
+        }
+
+        function updateSpeedForLevel() {
+            const levelIncreases = level - 1;
+            speedX = speedX > 0 ? baseSpeedX + (levelIncreases * speedMultiplier) : -baseSpeedX - (levelIncreases * speedMultiplier);
+            speedY = speedY > 0 ? baseSpeedY + (levelIncreases * speedMultiplier) : -baseSpeedY - (levelIncreases * speedMultiplier);
+        }
+
+        // Timer Helper Function (MM:SS format)
+        function updateTimerDisplay() {
+            const minutes = Math.floor(gameSeconds / 60);
+            const seconds = gameSeconds % 60;
+            const formattedMinutes = minutes < 10 ? "0" + minutes : minutes;
+            const formattedSeconds = seconds < 10 ? "0" + seconds : seconds;
+            timerText.textContent = `${formattedMinutes}:${formattedSeconds}`;
+        }
+
+        function startTimer() {
+            stopTimer(); // Ensure we don't have multiple timers running
+            gameSeconds = 0;
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                gameSeconds++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        // Interactive Panel Toggles
+        settingsBtn.addEventListener("click", function() {
+            mainMenuPanel.style.display = "none";
+            settingsPanel.style.display = "block";
+        });
+
+        backBtn.addEventListener("click", function() {
+            settingsPanel.style.display = "none";
+            mainMenuPanel.style.display = "block";
+        });
+
+        // Start button trigger logic
+        startBtn.addEventListener("click", function() {
+            const difficulty = difficultySelect.value;
+
+            if (difficulty === "easy") {
+                baseSpeedX = 2; baseSpeedY = 1.5; speedMultiplier = 0.5;
+            } else if (difficulty === "medium") {
+                baseSpeedX = 4; baseSpeedY = 3; speedMultiplier = 1;
+            } else if (difficulty === "hard") {
+                baseSpeedX = 7; baseSpeedY = 5; speedMultiplier = 1.5;
+            }
+
+            speedX = baseSpeedX;
+            speedY = baseSpeedY;
+            score = 0;
+            level = 1;
+            scoreText.textContent = score;
+            levelText.textContent = level;
+
+            // --- STREAK VALIDATION ENGINE ---
+            const todayDateString = new Date().toDateString(); 
+            const streakKey = isGuest ? "starCollectorStreak_guest" : `starCollectorStreak_${currentPilot.toLowerCase()}`;
+            const lastPlayedKey = isGuest ? "starCollectorLastDate_guest" : `starCollectorLastDate_${currentPilot.toLowerCase()}`;
+            const lastPlayedDate = storage.getItem(lastPlayedKey);
+
+            if (lastPlayedDate !== todayDateString) {
+                playStreak++;
+                streakText.textContent = playStreak;
+                storage.setItem(streakKey, playStreak);
+                storage.setItem(lastPlayedKey, todayDateString);
+            }
+
+            // Centralized reset parameters
+            starX = canvas.width / 2;
+            starY = canvas.height / 2;
+            currentRadius = normalRadius;
+
+            // Screen layout state switches
+            menu.style.display = "none";
+            statsDiv.style.display = "flex";
+            canvas.style.display = "block";
+            controlsDiv.style.display = "block";
+
+            // Start Live Timer
+            startTimer();
+
+            gameActive = true;
+            updateGame();
+        });
+
+        // Event listener for canvas click detection
+        canvas.addEventListener("click", function(event) {
+            if (!gameActive) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = (event.clientX - rect.left) * (canvas.width / rect.width);
+            const mouseY = (event.clientY - rect.top) * (canvas.height / rect.height);
+
+            const distance = Math.sqrt((mouseX - starX) ** 2 + (mouseY - starY) ** 2);
+
+            if (distance < currentRadius) {
+                score++;
+                scoreText.textContent = score;
+
+                // High score logic integration per active user session
+                if (score > highScore) {
+                    highScore = score;
+                    highScoreText.textContent = highScore;
+                    const scoreKey = isGuest ? "starCollectorHighScore_guest" : `starCollectorHighScore_${currentPilot.toLowerCase()}`;
+                    storage.setItem(scoreKey, highScore);
+                }
+
+                currentRadius = giantRadius;
+                setTimeout(function() {
+                    currentRadius = normalRadius;
+                }, 2000);
+
+                if (score % 5 === 0) {
+                    level++;
+                    levelText.textContent = level;
+                    updateSpeedForLevel();
+                }
+            }
+        });
+
+        resetScoreBtn.addEventListener("click", function() {
+            score = 0;
+            scoreText.textContent = score;
+        });
+
+        resetLevelBtn.addEventListener("click", function() {
+            level = 1;
+            levelText.textContent = level;
+            updateSpeedForLevel();
+        });
+
+        resetBothBtn.addEventListener("click", function() {
+            score = 0;
+            level = 1;
+            scoreText.textContent = score;
+            levelText.textContent = level;
+            updateSpeedForLevel();
+        });
+
+        endGameBtn.addEventListener("click", function() {
+            gameActive = false;
+            cancelAnimationFrame(animationId);
+            
+            // Turn off timer
+            stopTimer();
+
+            statsDiv.style.display = "none";
+            canvas.style.display = "none";
+            controlsDiv.style.display = "none";
+            menu.style.display = "block";
+            
+            // Clean view return
+            settingsPanel.style.display = "none";
+            mainMenuPanel.style.display = "block";
+        });
+    </script>
+
+</body>
+</html>
